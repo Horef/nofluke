@@ -22,6 +22,7 @@ classifiers = [
 [project.optional-dependencies]
 yaml = ["pyyaml>=6"]
 optuna = ["optuna>=4.0"]
+gp = ["optuna>=4.0", "torch", "scipy"]
 dev = ["pytest>=8", "pyyaml>=6"]
 
 [project.scripts]

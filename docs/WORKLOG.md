@@ -2,6 +2,22 @@
 Newest first. Each entry: what changed, how it was verified, what's next. Never edit or delete past entries.
 Earlier months: `docs/worklog/YYYY-MM.md`.
 
+## 2026-11-17 - Optuna backend, cluster guide, benchmark plan
+
+Changed: Optuna backend (`tpe`, `gp`) by an implementation agent, reviewed: the history encoder mapped choice
+values that compare equal (1, 1.0, True) to one category; fixed with the space's type-aware `ChoiceParam.index`
+and a test. `pending --split`; a cluster guide (`docs/guides/cluster.md`); benchmark plan
+(`docs/plans/benchmarks.md`, proposal). Decisions: D13.
+
+| Verification command | Result |
+|---|---|
+| `python -m pytest` | 214 passed in 9.5 s (optuna 5.1.0, torch 2.15.0 CPU, scipy 1.18.1) |
+| pending-trial probe (agent) | RUNNING trials change TPE (constant liar) and GP proposals |
+| ask(1) timing at 200 completed (agent) | TPE ≈ 0.011 s, GP ≈ 0.09-0.15 s |
+| `python tools/docmap.py check` | 0 errors |
+
+Next: benchmark harness to `docs/plans/benchmarks.md`; ask the owner before the full sweep.
+
 ## 2026-11-17 - Core MVP implemented and reviewed
 
 Changed: Implemented the core MVP to `docs/plans/mvp.md` (implementation agent), then reviewed it. Review fixes:

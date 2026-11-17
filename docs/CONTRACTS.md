@@ -26,7 +26,7 @@ space:                        # ordered; a parameter's `when` may only name earl
 strategy:
   name: random                # random | tpe | gp (tpe/gp need the optuna extra)
   n_init: 16                  # default clip(budget // 8, 8, 20); LHS design for the first n_init candidates
-  options: {}                 # passed to the backend (e.g. TPE kwargs); must be JSON
+  options: {}                 # extra Optuna sampler kwargs for tpe/gp (not `seed`; D13); must be JSON
 noise:
   reeval_share: 0.333         # target share of issued evaluations that are re-evaluations; 0 = off
   min_candidates: 8           # candidates with a result before re-evaluation starts

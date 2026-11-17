@@ -8,8 +8,10 @@ candidates a given (config, seed, tells) produces is a breaking change.
 - `nofluke.Study` (create/open, ask, tell, tell_failed, tell_many, abandon, pending, best, status, export_rows,
   is_done, verify) over an append-only, locked JSONL journal with deterministic replay.
 - Search space: float/int (optionally log), choice, bool, conditional parameters (`when`); JSON or YAML configs.
-- Strategies: Latin-hypercube start, then random.
+- Strategies: Latin-hypercube start, then random, Optuna TPE (`nofluke[optuna]`) or Optuna GP (`nofluke[gp]`,
+  needs torch); `strategy.options` pass sampler kwargs (D13).
 - Noise protocol: evaluation seeds shared per replicate, rolling re-evaluation of the plausible-best set,
   empirical-Bayes shrunk-mean ranking with lower confidence bounds.
 - Local evaluators: `optimize` (Python function, threads or processes) and `run_command` (shell template).
-- CLI: `nofluke init / ask / tell / pending / abandon / status / best / export / done / verify / run`.
+- CLI: `nofluke init / ask / tell / pending / abandon / status / best / export / done / verify / run`;
+  `ask` and `pending` take `--split DIR`.

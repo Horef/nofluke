@@ -6,31 +6,33 @@ and uses), `calls NAME` (callers and callees), `deps PATH` (module imports) or `
 symbols of the repo).
 
   - **`src/nofluke/`** — The nofluke package: study configuration and search space, the append-only journal and its replayed state, the noise statistics and planner that decide each ask, the `Study` API, local evaluators and the command line.
-    - `__init__.py` — nofluke: ask/tell search over slow, noisy evaluations that run outside Python, without rewarding flukes. · imported by 7
+    - `__init__.py` — nofluke: ask/tell search over slow, noisy evaluations that run outside Python, without rewarding flukes. · imported by 8
     - `cli.py` — Command line: `nofluke init | ask | tell | pending | abandon | status | best | export | done | verify | run`. · imported by 1
     - `config.py` — Study configuration: loading JSON/YAML, filling defaults, validating, and canonical hashes. · imported by 3
-    - `errors.py` — Error type raised for every mistake a user of nofluke can make. · imported by 15
+    - `errors.py` — Error type raised for every mistake a user of nofluke can make. · imported by 17
     - `journal.py` — The append-only JSONL journal of one study folder, with a cross-platform lock file. · imported by 2
     - `noise.py` — Noise statistics: shrunk means, confidence bounds, ranking, plausible-best set and re-evaluation choice (D8, D9). · imported by 4
     - `planner.py` — Planner: decides one ask, as a pure function of (normalised config, replayed state, number of slots). · imported by 2
-    - `rng.py` — Seed derivation: every random draw in nofluke comes from `derive(study_seed, purpose, *indices)`. · imported by 6
+    - `rng.py` — Seed derivation: every random draw in nofluke comes from `derive(study_seed, purpose, *indices)`. · imported by 7
     - `runner.py` — Local evaluators: `optimize` runs a Python function, `run_command` runs a shell command, per evaluation. · imported by 3
-    - `space.py` — Search space: typed parameters, conditional activation and the unit-cube codec. · imported by 7
+    - `space.py` — Search space: typed parameters, conditional activation and the unit-cube codec. · imported by 9
     - `state.py` — Study state rebuilt by pure replay of journal events (candidates, evaluations, counters, budget). · imported by 4
     - `study.py` — The `Study` class: the Python API over one study folder (ask, tell, abandon, best, status, export, verify). · imported by 3
-    - **`src/nofluke/strategies/`** — Candidate-proposing strategies: the `Strategy` interface and `History` a strategy sees, the built-in random strategy, the Latin-hypercube design used for every study's first candidates, and the registry (`get_strategy`) that maps a config's `strategy.name` to an implementation.
-      - `__init__.py` — Strategy registry: `get_strategy(config)` returns the candidate-proposing strategy a study asked for. · imported by 2
-      - `base.py` — Strategy interface: the `History` a strategy sees and the `Strategy` base class that proposes one candidate. · imported by 2
-      - `lhs.py` — Latin-hypercube design for the first `n_init` candidates of every study (D11). · imported by 1
+    - **`src/nofluke/strategies/`** — Candidate-proposing strategies: the `Strategy` interface and `History` a strategy sees, the built-in random strategy, the Optuna backend (`tpe`, `gp`), the Latin-hypercube design used for every study's first candidates, and the registry (`get_strategy`) that maps a config's `strategy.name` to an implementation.
+      - `__init__.py` — Strategy registry: `get_strategy(config)` returns the candidate-proposing strategy a study asked for. · imported by 3
+      - `base.py` — Strategy interface: the `History` a strategy sees and the `Strategy` base class that proposes one candidate. · imported by 4
+      - `lhs.py` — Latin-hypercube design for the first `n_init` candidates of every study (D11). · imported by 2
+      - `optuna_backend.py` — Optuna strategy backend (`tpe`, `gp`): proposes with an Optuna sampler on a study rebuilt from the history (D3, D7, D11). · imported by 2
       - `random.py` — Random-search strategy: every candidate is a uniform draw from the search space. · imported by 1
 - **`tests/`** — Offline pytest suite for nofluke (about 20 s): one test module per source module, plus `test_determinism.py` (same operations give the same candidates, in separate folders and in a subprocess, and `verify` catches edits) and `test_cli.py` (full ask/tell loops through `nofluke.cli.main`).
-  - `conftest.py` — Shared test helpers: a config factory and `Sim`, an in-memory ask/tell driver over the pure planner. · imported by 5
+  - `conftest.py` — Shared test helpers: a config factory and `Sim`, an in-memory ask/tell driver over the pure planner. · imported by 6
   - `scenario.py` — A fixed sequence of study operations used by the determinism and runner tests (module-level, so picklable). · imported by 3
   - `test_cli.py` — Tests for nofluke.cli through `main([...])`: full ask/tell loops with files, outputs, errors and exit codes.
   - `test_config.py` — Tests for nofluke.config: defaults, unknown keys, validation, hashes, YAML loading.
   - `test_determinism.py` — Determinism contract (D7): same operations give the same candidates, in separate folders and in a subprocess.
   - `test_journal.py` — Tests for nofluke.journal: append/read, torn lines, malformed lines, lock contention and stale locks.
   - `test_noise.py` — Tests for nofluke.noise against hand-computed D9 numbers, fallbacks, tie-breaks and the plausible-best set.
+  - `test_optuna_backend.py` — Tests for nofluke.strategies.optuna_backend (`tpe`, `gp`): valid proposals, determinism, pending candidates, options.
   - `test_planner.py` — Tests for nofluke.planner through an in-memory `Sim`: D8 slot order, re-evaluation share, finalists, retries, seeds.
   - `test_rng.py` — Tests for nofluke.rng: stable, independent, index-sensitive streams.
   - `test_runner.py` — Tests for nofluke.runner: `optimize` with threads and processes, failures, and `run_command` with a tiny script.
@@ -41,16 +43,16 @@ symbols of the repo).
 
 ## Most imported modules (change with care)
 
-- `nofluke.errors` — imported by 15
-- `nofluke.space` — imported by 7
-- `nofluke` — imported by 7
-- `nofluke.rng` — imported by 6
-- `conftest` — imported by 5
+- `nofluke.errors` — imported by 17
+- `nofluke.space` — imported by 9
+- `nofluke` — imported by 8
+- `nofluke.rng` — imported by 7
+- `conftest` — imported by 6
+- `nofluke.strategies.base` — imported by 4
 - `nofluke.state` — imported by 4
 - `nofluke.noise` — imported by 4
 - `scenario` — imported by 3
 - `nofluke.study` — imported by 3
-- `nofluke.runner` — imported by 3
 
 ## Enforced import boundaries
 

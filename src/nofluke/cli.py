@@ -90,19 +90,23 @@ def _cmd_init(args: argparse.Namespace) -> int:
 
 def _cmd_ask(args: argparse.Namespace) -> int:
     study = Study.open(args.dir)
-    asks = study.ask(args.n)
+    _emit_asks(study, study.ask(args.n), args)
+    return 0
+
+
+def _emit_asks(study: Study, asks: list[Ask], args: argparse.Namespace) -> None:
+    """Print or write the asks JSON; with --split also write DIR/eval-<id>.json, each the evaluation object alone."""
     if args.split:
         split = Path(args.split)
         split.mkdir(parents=True, exist_ok=True)
         for a in asks:
             (split / f"eval-{a.eval}.json").write_text(json.dumps(a.to_dict(), indent=2) + "\n", encoding="utf-8")
     _emit(json.dumps(_asks_json(study, asks), indent=2), args.out)
-    return 0
 
 
 def _cmd_pending(args: argparse.Namespace) -> int:
     study = Study.open(args.dir)
-    _emit(json.dumps(_asks_json(study, study.pending()), indent=2), args.out)
+    _emit_asks(study, study.pending(), args)
     return 0
 
 
@@ -248,6 +252,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--info", help="JSON object stored with the result")
     p = command("pending", _cmd_pending, "list evaluations asked but not yet told (JSON)")
     p.add_argument("--out", help="write the JSON to this file instead of printing it")
+    p.add_argument("--split", metavar="DIR", help="also write DIR/eval-<id>.json, one file per evaluation")
     p = command("abandon", _cmd_abandon, "give up pending evaluations")
     p.add_argument("--eval", type=int)
     p.add_argument("--older-than", metavar="DURATION", help="e.g. 90s, 30m, 2h")

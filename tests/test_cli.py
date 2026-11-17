@@ -94,6 +94,10 @@ def test_ask_out_pending_and_budget_exhaustion(study_dir, tmp_path, capsys):
     pending_file = tmp_path / "pending.json"
     cli(capsys, "pending", "--dir", str(study_dir), "--out", str(pending_file))
     assert json.loads(pending_file.read_text(encoding="utf-8")) == asked
+    split = tmp_path / "re-split"
+    cli(capsys, "pending", "--dir", str(study_dir), "--split", str(split))
+    assert sorted(json.loads(f.read_text(encoding="utf-8"))["eval"] for f in split.glob("eval-*.json")) == sorted(
+        e["eval"] for e in asked["evals"])  # fmt: skip
     code, out, _ = cli(capsys, "ask", "--dir", str(study_dir), "-n", "100")
     assert len(json.loads(out)["evals"]) == 34
     code, out, _ = cli(capsys, "ask", "--dir", str(study_dir))

@@ -7,8 +7,8 @@ each, a simulator, a lab script), and tell the scores back. nofluke keeps an app
 journal, re-evaluates the leading candidates with new seeds, and ranks them by a shrunk mean with a lower
 confidence bound, so the winner it reports is not just the luckiest single run.
 
-> Status: early development (0.1.0.dev0). The CLI and Python API below work and are tested; the Optuna strategies
-> (`tpe`, `gp`) are not implemented yet. See `docs/STATUS.md`.
+> Status: early development (0.1.0.dev0). The CLI, the Python API and the strategies below work and are tested;
+> the noise-protocol defaults are not yet benchmarked. See `docs/STATUS.md`.
 
 ## Why
 Existing optimisers (Optuna, SMAC3, Nevergrad, pymoo, ...) are excellent at proposing candidates, but none offers a
@@ -38,6 +38,12 @@ space:
   epochs: {type: int, low: 30, high: 200}
   batch:  {type: choice, values: [16, 32, 64]}
 ```
+
+## Strategies
+The first `n_init` candidates come from a Latin-hypercube design; after that `strategy.name` decides: `random`
+(default, numpy only), `tpe` (Optuna TPE; `pip install "nofluke[optuna]"`; best for mixed and conditional spaces)
+or `gp` (Optuna GP; `pip install "nofluke[gp]"`, needs torch; continuous spaces). Running a cluster search:
+`docs/guides/cluster.md`.
 
 ## Python
 ```python

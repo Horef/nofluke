@@ -33,13 +33,11 @@ def test_create_and_open(tmp_path):
 def test_create_validates_config_and_strategy(tmp_path):
     with pytest.raises(NoflukeError, match="budget"):
         Study.create(tmp_path / "a", {**make_config(), "budget": 0})
-    with pytest.raises(NoflukeError, match=r"nofluke\[optuna\]"):
-        Study.create(tmp_path / "b", make_config(strategy={"name": "tpe"}))
     with pytest.raises(NoflukeError, match="unknown name 'nope'"):
         Study.create(tmp_path / "c", make_config(strategy={"name": "nope"}))
     with pytest.raises(NoflukeError, match="takes no options"):
         Study.create(tmp_path / "d", make_config(strategy={"options": {"a": 1}}))
-    assert not (tmp_path / "b" / "journal.jsonl").exists()
+    assert not (tmp_path / "c" / "journal.jsonl").exists()
 
 
 def test_study_event_has_provenance(tmp_path):

@@ -173,16 +173,17 @@ class ChoiceParam(Param):
         return self.values[min(math.floor(min(max(float(u), 0.0), 1.0) * k), k - 1)]
 
     def encode(self, value: Any) -> float:
-        return (self._index(value) + 0.5) / len(self.values)
+        return (self.index(value) + 0.5) / len(self.values)
 
-    def _index(self, value: Any) -> int:
+    def index(self, value: Any) -> int:
+        """Position of `value` in `values`, matching type as well as value (1, 1.0 and True are distinct)."""
         for i, v in enumerate(self.values):
             if _key(v) == _key(value):
                 return i
         raise ValueError(f"expected one of {list(self.values)}, got {value!r}")
 
     def coerce(self, value: Any) -> Scalar:
-        return self.values[self._index(value)]
+        return self.values[self.index(value)]
 
     def _spec(self) -> dict[str, Any]:
         return {"values": list(self.values)}

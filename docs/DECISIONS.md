@@ -16,6 +16,7 @@ Every choice between alternatives, and every gap the code or sources leave that 
 | D11 | Strategies: Latin-hypercube start, then random (built-in) or Optuna TPE/GP (2026-11-17; status: accepted) |
 | D6 | Answers to simple_complex_v1's wish list (2026-11-17; status: accepted) |
 | D12 | Public GitHub repository; the agent skill lives in this repository (2026-11-17; status: accepted) |
+| D13 | Optuna backend details (2026-11-17; status: accepted) |
 <!-- docmap:end -->
 
 ## D1. Build the layer around the optimiser, not another GA engine (2026-11-17; status: accepted)
@@ -177,3 +178,20 @@ Every choice between alternatives, and every gap the code or sources leave that 
 - **Alternatives:** Private repository; the skill in the claude-plugins marketplace repository.
 - **Consequences:** The skill changes in the same commits as the CLI it documents; a marketplace entry can point here.
 - **Evidence / source:** owner, 2026-11-17.
+
+## D13. Optuna backend details (2026-11-17; status: accepted)
+- **Context:** D3 and D11 fixed the shape of the Optuna backend; implementing it raised smaller choices.
+- **Decision:** Samplers get `n_startup_trials = 4` (the LHS start already explores; below 4 results the sampler
+  draws seeded random points). TPE: `multivariate`, `constant_liar`, and `group` only when the space has `when`
+  conditions. Pending candidates are replayed as RUNNING trials (verified to move TPE and GP proposals); failed
+  candidates are not replayed (Optuna 5.1's TPE and GP ignore FAIL trials). Choices and booleans are passed as
+  category indices matched by type and value, so 1, 1.0 and True stay distinct. `strategy.options` are extra sampler
+  keyword arguments; `seed` and unknown options are refused at `init`. `gp` needs torch and scipy (extra `gp`).
+- **Alternatives:** Optuna defaults (`n_startup_trials = 10`) - repeats the LHS exploration; replaying FAIL trials
+  - no effect on the current samplers.
+- **Consequences:** GP models only unconditional parameters (conditional ones are sampled at random): use `tpe`
+  for conditional spaces. TPE proposals are numpy-only and reproducible across machines on one Optuna version; GP
+  proposals depend on torch/scipy floating point and are reproducible per environment only. Any Optuna upgrade may
+  change proposals for the same inputs; the journal's provenance records the version and `verify` detects drift.
+  Tested only on Optuna 5.1.0. ask(1) at 200 completed candidates: TPE ≈ 0.01 s, GP ≈ 0.1-0.15 s.
+- **Evidence / source:** backend implementation and probes, 2026-11-17 (`tests/test_optuna_backend.py`).
