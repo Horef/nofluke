@@ -65,7 +65,7 @@ def test_full_loop_with_split_files(study_dir, tmp_path, capsys):
 
     code, out, _ = cli(capsys, "best", "--dir", str(study_dir), "--top", "3", "--json")
     best = json.loads(out)
-    assert set(best) == {"n_candidates", "sigma", "tie_break", "best"} and len(best["best"]) == 3
+    assert set(best) == {"n_candidates", "sigma", "tie_break", "seed_effects", "best"} and len(best["best"]) == 3
     assert best["best"][0]["rank"] == 1 and best["best"][0]["n"] >= 2
     code, out, _ = cli(capsys, "best", "--dir", str(study_dir), "--top", "2")
     assert code == 0 and "rank" in out and "noise SD" in out and len(out.strip().splitlines()) == 4

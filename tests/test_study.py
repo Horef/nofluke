@@ -201,13 +201,13 @@ def test_best_status_and_export_shapes(tmp_path):
             study.tell(a.eval, score(a), info={"runtime_s": 2.5, "tag": "x"})
     best = study.best(top=3)
     assert [r["rank"] for r in best] == [1, 2, 3]
-    assert set(best[0]) == {"rank", "candidate", "params", "n", "mean", "sd", "shrunk_mean", "se", "lcb"}
+    assert set(best[0]) == {"rank", "candidate", "params", "n", "mean", "raw_mean", "sd", "shrunk_mean", "se", "lcb"}
     assert best[0]["shrunk_mean"] >= best[1]["shrunk_mean"] >= best[2]["shrunk_mean"]
     assert all(r["lcb"] <= r["shrunk_mean"] for r in best)
     json.dumps(best)
     assert len(study.best()) == study.best_report()["n_candidates"]
     report = study.best_report(2)
-    assert set(report) == {"n_candidates", "sigma", "tie_break", "best"} and len(report["best"]) == 2
+    assert set(report) == {"n_candidates", "sigma", "tie_break", "seed_effects", "best"} and len(report["best"]) == 2
     assert report["sigma"]["source"] in {"pooled", "prior_sd", "spread", "own"}
     with pytest.raises(NoflukeError, match="top"):
         study.best(top=0)
@@ -238,7 +238,7 @@ def test_minimize_reports_user_units_and_an_upper_bound(tmp_path):
     assert all(r["ucb"] >= r["shrunk_mean"] for r in best)
     top = best[0]
     values = [r["value"] for r in study.export_rows() if r["candidate"] == top["candidate"]]
-    assert top["mean"] == pytest.approx(sum(values) / len(values))  # user units, not negated
+    assert top["raw_mean"] == pytest.approx(sum(values) / len(values))  # user units, not negated
 
 
 def test_journal_is_append_only(tmp_path):

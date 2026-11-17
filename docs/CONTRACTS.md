@@ -36,6 +36,7 @@ noise:
   nu0: 4                      # prior weight of the pooled variance (D9)
   prior_sd: null              # optional per-evaluation noise SD used until replicates exist
   seed_mode: shared           # shared | per_candidate (D10)
+  seed_effects: adjust        # adjust | ignore: correct shared-seed offsets before ranking (D14)
 ```
 
 `when: {parent: value}` or `{parent: [v1, v2]}`: the parameter is active only if `parent` is active and its value
@@ -79,8 +80,9 @@ internally in "higher is better" units (negated for `minimize`).
 `{"eval": 7, "value": 0.771, "info": {"test_acc": 0.70, "runtime_s": 412}}` or
 `{"eval": 7, "status": "failed", "reason": "node failure"}`. `info` is stored, never used for selection.
 
-`nofluke best --json` prints `{"n_candidates", "sigma": {"value", "source"}, "tie_break", "best": [...]}`; `best` is
-ranked as in D9 with `rank`, `candidate`, `params`, `n`, `mean`, `sd`, `shrunk_mean`, `se`, `lcb`. `sigma.source` is
+`nofluke best --json` prints `{"n_candidates", "sigma": {"value", "source"}, "tie_break", "seed_effects", "best":
+[...]}`; `best` is ranked as in D9 with `rank`, `candidate`, `params`, `n`, `mean` (seed-adjusted, D14), `raw_mean`,
+`sd`, `shrunk_mean`, `se`, `lcb`; `seed_effects` maps replicate number (as a string) to its estimated effect. `sigma.source` is
 `pooled`, `prior_sd`, `spread`, `own` or `none`; `tie_break` is true when τ² = 0 and the secondary key decided.
 Values are in the user's units (for `minimize`, `lcb` becomes the upper bound and is named `ucb`).
 

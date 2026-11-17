@@ -11,7 +11,10 @@ from nofluke.noise import CandidateStats, NoiseModel, choose_reeval, estimate, p
 
 
 def sim_with(values: dict[int, list[float]], **overrides) -> Sim:
-    """A Sim in which candidate k has completed the given values (evals are issued by `ask`, then told)."""
+    """A Sim in which candidate k has completed the given values (evals are issued by `ask`, then told).
+
+    The D9 formula tests switch the D14 seed-effect correction off unless a test asks for it."""
+    overrides["noise"] = {"seed_effects": "ignore", **overrides.get("noise", {})}
     sim = Sim(make_config(budget=500, strategy={"n_init": 500}, **overrides))
     sim.ask(len(values))  # candidate ids 1..K, replicate 0
     cand_evals = {}
@@ -40,7 +43,8 @@ EXPECTED = {
 
 
 def test_d9_formulas_match_hand_computation():
-    model = estimate(sim_with(DATA).state, make_config(budget=500))
+    sim = sim_with(DATA)
+    model = estimate(sim.state, sim.config)
     assert model.sigma_source == "pooled" and model.sigma == pytest.approx(math.sqrt(1.5))
     assert not model.tie_break
     for cid, want in EXPECTED.items():
@@ -116,7 +120,8 @@ def test_ties_in_the_ranking_fall_back_to_the_candidate_id():
 
 
 def _stat(cid, shrunk, se, n=1, mean=None):
-    return CandidateStats(cid, n, shrunk if mean is None else mean, None, 1.0, shrunk, se, shrunk - 1.5 * se, shrunk + 1.5 * se)
+    m = shrunk if mean is None else mean
+    return CandidateStats(cid, n, m, m, None, 1.0, shrunk, se, shrunk - 1.5 * se, shrunk + 1.5 * se)
 
 
 def test_plausible_best_set_and_reeval_choice():
@@ -142,3 +147,60 @@ def test_reeval_ties_prefer_the_higher_shrunk_mean_then_lower_id():
     model = NoiseModel(stats, 1.5, 1.0, "pooled", False)
     assert choose_reeval(model, {1: 1, 2: 1, 3: 1}, 6) == 3
     assert choose_reeval(model, {1: 1, 2: 1, 3: 2}, 6) == 1
+
+
+# --- D14: seed-effect correction ----------------------------------------------------------------------------------
+
+def _sim_replicates(table: dict[int, dict[int, float]], **noise_overrides) -> Sim:
+    """A Sim where candidate c has value table[c][r] on replicate r (replicate 0 asked first, then re-evaluations)."""
+    sim = Sim(make_config(budget=500, strategy={"n_init": 500}, noise=noise_overrides))
+    sim.ask(len(table))
+    for cid, by_rep in table.items():
+        first = next(e for e in sim.state.evals.values() if e.candidate == cid)
+        sim.tell(first.id, by_rep[0])
+        for rep in sorted(r for r in by_rep if r > 0):
+            e = sim.state.next_eval
+            sim.state.apply({"event": "ask", "ask": sim.state.n_asks + 1, "time": "t", "candidates": [], "evals": [
+                {"eval": e, "candidate": cid, "replicate": rep, "seed": 0, "kind": "reeval", "attempt": 1}]})
+            sim.tell(e, by_rep[rep])
+    return sim
+
+
+# true values f = (1, 2, 3, 4); seed effects b = (0, +10, -4); candidate 1 got the lucky seed 1 twice over the others
+TRUE = {1: 1.0, 2: 2.0, 3: 3.0, 4: 4.0}
+EFFECT = {0: 0.0, 1: 10.0, 2: -4.0}
+REPS = {1: (0, 1), 2: (0, 1, 2), 3: (0, 2), 4: (0,)}
+
+
+def test_seed_effects_are_recovered_and_removed_exactly_without_noise():
+    table = {c: {r: TRUE[c] + EFFECT[r] for r in REPS[c]} for c in TRUE}
+    model = estimate(_sim_replicates(table).state, make_config(budget=500))
+    effects = model.seed_effects
+    assert effects[1] - effects[0] == pytest.approx(10.0) and effects[2] - effects[0] == pytest.approx(-4.0)
+    means = {c: model.stats[c].mean for c in TRUE}
+    for c in TRUE:  # adjusted means differ exactly by the true differences
+        assert means[c] - means[1] == pytest.approx(TRUE[c] - TRUE[1])
+    assert rank(model)[0] == 4
+    assert model.stats[1].raw_mean == pytest.approx((1 + 0) / 2 + (1 + 10) / 2)
+
+
+def test_ignoring_seed_effects_lets_a_lucky_seed_win():
+    table = {c: {r: TRUE[c] + EFFECT[r] for r in REPS[c]} for c in TRUE}
+    model = estimate(_sim_replicates(table, seed_effects="ignore").state,
+                     make_config(budget=500, noise={"seed_effects": "ignore"}))  # fmt: skip
+    assert model.seed_effects == {} and model.stats[1].mean > model.stats[4].mean  # 6.0 > 4.0: the fluke
+
+
+def test_no_correction_with_one_replicate_or_per_candidate_seeds():
+    one = {c: {0: TRUE[c]} for c in TRUE}
+    assert estimate(_sim_replicates(one).state, make_config(budget=500)).seed_effects == {}
+    table = {c: {r: TRUE[c] + EFFECT[r] for r in REPS[c]} for c in TRUE}
+    cfg = make_config(budget=500, noise={"seed_mode": "per_candidate"})
+    assert estimate(_sim_replicates(table, seed_mode="per_candidate").state, cfg).seed_effects == {}
+
+
+def test_journals_without_the_key_keep_unadjusted_statistics():
+    table = {c: {r: TRUE[c] + EFFECT[r] for r in REPS[c]} for c in TRUE}
+    sim = _sim_replicates(table)
+    legacy = {**sim.config, "noise": {k: v for k, v in sim.config["noise"].items() if k != "seed_effects"}}
+    assert estimate(sim.state, legacy).seed_effects == {}

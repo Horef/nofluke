@@ -17,6 +17,7 @@ Every choice between alternatives, and every gap the code or sources leave that 
 | D6 | Answers to simple_complex_v1's wish list (2026-11-17; status: accepted) |
 | D12 | Public GitHub repository; the agent skill lives in this repository (2026-11-17; status: accepted) |
 | D13 | Optuna backend details (2026-11-17; status: accepted) |
+| D14 | Correct for shared seed effects before ranking (2026-11-17; status: accepted) |
 <!-- docmap:end -->
 
 ## D1. Build the layer around the optimiser, not another GA engine (2026-11-17; status: accepted)
@@ -195,3 +196,23 @@ Every choice between alternatives, and every gap the code or sources leave that 
   change proposals for the same inputs; the journal's provenance records the version and `verify` detects drift.
   Tested only on Optuna 5.1.0. ask(1) at 200 completed candidates: TPE ≈ 0.01 s, GP ≈ 0.1-0.15 s.
 - **Evidence / source:** backend implementation and probes, 2026-11-17 (`tests/test_optuna_backend.py`).
+
+## D14. Correct for shared seed effects before ranking (2026-11-17; status: accepted)
+- **Context:** With shared evaluation seeds (D10), replicate r of every candidate uses the same seed. If the seed
+  has an effect common to all candidates (e.g. it also picks a data split or ordering), candidates evaluated on
+  different sets of seeds are compared with different offsets, and D9 treated replicates as independent. In the
+  benchmark smoke run (Branin, half the noise variance shared per seed) all n = 3 candidates sat about +20 above
+  their true values and heavily re-evaluated early candidates won.
+- **Decision:** With `seed_mode: shared` and `noise.seed_effects: adjust` (default), values are corrected before the
+  D9 statistics by the least-squares additive model y_ir = f_i + b_r + e_ir (seed as a block, as in racing),
+  fitted by alternating means and anchored so the effects average zero over observations; `best` reports the
+  adjusted `mean`, the `raw_mean`, and the estimated `seed_effects`. `ignore` keeps D9 on raw values. Journals
+  written before this entry have no `seed_effects` key and replay unadjusted, so their proposals do not change.
+- **Alternatives:** Fresh seeds per candidate (`per_candidate`) - loses pairing; a paired-difference analysis - same
+  idea, harder with unbalanced replicates. Also tested and rejected: taking plausible-best membership (D8) from the
+  raw-mean UCB instead of the posterior UCB, so new n = 1 candidates get re-evaluated sooner - no consistent gain
+  (median D9 regret better in 1 of 12 problem × noise × strategy cells, worse in 5, 10 seeds, budget 96).
+- **Consequences:** Without a common seed effect the correction estimates effects near zero at a small variance
+  cost. Whether it helps on real training noise is unresolved; the benchmark compares `-on` with `-raw` arms.
+- **Evidence / source:** smoke and 4-seed probes, 2026-11-17 (TPE on Branin, noise 0.5: median D9 regret 5.4 with
+  the correction vs 9.3 without; directional only); `tests/test_noise.py` exact recovery test.

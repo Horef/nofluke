@@ -12,6 +12,7 @@ public surface (`nofluke.Study`, `nofluke.cli.main`) except in the unit tests of
 |---|---|---|
 | `conftest.py` | Shared test helpers: a config factory and `Sim`, an in-memory ask/tell driver over the pure planner. | `test_determinism`, `test_noise`, `test_optuna_backend`, `test_planner` (+2) |
 | `scenario.py` | A fixed sequence of study operations used by the determinism and runner tests (module-level, so picklable). | `test_cli`, `test_determinism`, `test_runner` |
+| `test_benchmark_problems.py` | Tests for benchmarks/problems.py and benchmarks/harness.py: known optima, noise determinism and a tiny end-to-end run. |  |
 | `test_cli.py` | Tests for nofluke.cli through `main([...])`: full ask/tell loops with files, outputs, errors and exit codes. |  |
 | `test_config.py` | Tests for nofluke.config: defaults, unknown keys, validation, hashes, YAML loading. |  |
 | `test_determinism.py` | Determinism contract (D7): same operations give the same candidates, in separate folders and in a subprocess. |  |

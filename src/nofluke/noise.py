@@ -1,14 +1,15 @@
 """Noise statistics: shrunk means, confidence bounds, ranking, plausible-best set and re-evaluation choice (D8, D9).
 
-All numbers are in "higher is better" units (values are negated for `minimize`; the caller converts back).
+All numbers are in "higher is better" units (values are negated for `minimize`; the caller converts back). With shared
+evaluation seeds the values are first corrected for an additive effect per replicate seed (D14).
 `estimate(state, config)` builds a `NoiseModel` with one `CandidateStats` per candidate that has a completed value;
-`rank`, `plausible_best` and `choose_reeval` are pure functions of that model. Replicates are treated as independent.
+`rank`, `plausible_best` and `choose_reeval` are pure functions of that model. After the seed-effect correction, replicates are treated as independent.
 """
 
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 import numpy as np
@@ -22,7 +23,8 @@ class CandidateStats:
 
     candidate: int
     n: int
-    mean: float
+    mean: float  # after the seed-effect correction (D14); equals raw_mean when there is none
+    raw_mean: float
     sd: float | None  # sample SD, None for n = 1
     sigma_i: float  # per-evaluation noise SD estimate (D9)
     shrunk_mean: float
@@ -45,22 +47,62 @@ class NoiseModel:
     sigma: float
     sigma_source: str
     tie_break: bool
+    seed_effects: dict[int, float] = field(default_factory=dict)
 
 
-def _scores(state: StudyState, sign: float) -> dict[int, np.ndarray]:
-    """Completed values per candidate in eval-id order, for candidates with at least one."""
+def _scores(state: StudyState, sign: float, adjust: bool) -> tuple[dict[int, np.ndarray], dict[int, float]]:
+    """Completed values per candidate in eval-id order, for candidates with at least one, plus seed effects.
+
+    With `adjust` (shared seeds, D14) the values are corrected for an additive effect per replicate seed, so that
+    candidates measured on different sets of seeds compare fairly; the effects are returned by replicate.
+    """
+    observations = [(ev.candidate, ev.replicate, sign * float(ev.value))  # type: ignore[arg-type]
+                    for ev in state.evals.values() if ev.status == OK]  # fmt: skip
+    effects = _seed_effects(observations) if adjust else {}
     values: dict[int, list[float]] = {}
-    for ev in state.evals.values():
-        if ev.status == OK:
-            values.setdefault(ev.candidate, []).append(sign * float(ev.value))  # type: ignore[arg-type]
-    return {cid: np.array(values[cid], dtype=float) for cid in sorted(values)}
+    for cid, replicate, y in observations:
+        values.setdefault(cid, []).append(y - effects.get(replicate, 0.0))
+    return {cid: np.array(values[cid], dtype=float) for cid in sorted(values)}, effects
+
+
+def _seed_effects(observations: list[tuple[int, int, float]], iterations: int = 200) -> dict[int, float]:
+    """Least-squares additive effects b_r of the model y_ir = f_i + b_r + e (D14), by alternating means.
+
+    Anchored so that the effects average to zero over the observations, which keeps adjusted values on the scale of
+    the raw ones. Returns {} when only one replicate seed has results (nothing to separate).
+    """
+    replicates = sorted({r for _, r, _ in observations})
+    if len(replicates) < 2:
+        return {}
+    candidates = sorted({c for c, _, _ in observations})
+    c_index = {c: k for k, c in enumerate(candidates)}
+    r_index = {r: k for k, r in enumerate(replicates)}
+    ci = np.array([c_index[c] for c, _, _ in observations])
+    ri = np.array([r_index[r] for _, r, _ in observations])
+    y = np.array([v for _, _, v in observations], dtype=float)
+    n_c = np.bincount(ci, minlength=len(candidates)).astype(float)
+    n_r = np.bincount(ri, minlength=len(replicates)).astype(float)
+    b = np.zeros(len(replicates))
+    for _ in range(iterations):
+        f = np.bincount(ci, weights=y - b[ri], minlength=len(candidates)) / n_c
+        new_b = np.bincount(ri, weights=y - f[ci], minlength=len(replicates)) / n_r
+        new_b -= float((new_b[ri]).mean())
+        if np.max(np.abs(new_b - b)) < 1e-12:
+            b = new_b
+            break
+        b = new_b
+    return {r: float(b[r_index[r]]) for r in replicates}
 
 
 def estimate(state: StudyState, config: Mapping[str, Any]) -> NoiseModel:
     """Compute the D9 empirical-Bayes model from the completed evaluations of `state`."""
     noise = config["noise"]
     z, nu0, prior_sd = float(noise["z"]), float(noise["nu0"]), noise["prior_sd"]
-    scores = _scores(state, 1.0 if config["direction"] == "maximize" else -1.0)
+    # Journals written before D14 have no `seed_effects` key and keep their original (unadjusted) statistics.
+    adjust = noise.get("seed_effects", "ignore") == "adjust" and noise["seed_mode"] == "shared"
+    sign = 1.0 if config["direction"] == "maximize" else -1.0
+    scores, effects = _scores(state, sign, adjust)
+    raw = _scores(state, sign, False)[0] if effects else scores
     ids = list(scores)
     if not ids:
         return NoiseModel({}, z, 0.0, "none", False)
@@ -102,6 +144,7 @@ def estimate(state: StudyState, config: Mapping[str, Any]) -> NoiseModel:
             candidate=cid,
             n=int(n[k]),
             mean=float(ybar[k]),
+            raw_mean=float(raw[cid].mean()),
             sd=math.sqrt(s2[k]) if n[k] > 1 else None,
             sigma_i=float(sigma_i[k]),
             shrunk_mean=float(shrunk[k]),
@@ -111,7 +154,7 @@ def estimate(state: StudyState, config: Mapping[str, Any]) -> NoiseModel:
         )
         for k, cid in enumerate(ids)
     }
-    return NoiseModel(stats, z, float(sigma), source, bool(tie_break))
+    return NoiseModel(stats, z, float(sigma), source, bool(tie_break), effects)
 
 
 def _rank_key(model: NoiseModel, s: CandidateStats) -> tuple[float, float, int]:

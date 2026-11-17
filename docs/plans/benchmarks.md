@@ -1,5 +1,5 @@
 # Plan: benchmark harness
-Status: proposal (2026-11-17)
+Status: current (verified 2026-11-17; in progress)
 
 ## Objective
 Measure, at budgets of 64-128 noisy evaluations, (a) whether the noise protocol (D8, D9) picks better true optima
@@ -40,6 +40,13 @@ Large-scale benchmarking (HPOBench/YAHPO suites), multi-fidelity, wall-clock com
   each metric, and the paired win rate of protocol-on vs protocol-off and of each strategy vs random.
 - **Compute:** a smoke configuration (2 seeds, budget 32) runs in under a minute; the full sweep is a few CPU-hours at
   most and is run only after the owner approves (AGENTS.md compute rule), within `memory_budget`.
+
+## As built (2026-11-17)
+Implemented in `benchmarks/` (see its README). Noise split 50/50 by variance between a seed-level offset shared by
+all candidates evaluated with the same eval seed and independent noise. Branin and Hartmann6 are negated, not
+rescaled. `sklearn_svm` (digits) uses the best true value seen as its reference optimum and ignores the noise
+ratio. Arms gained `<strategy>-raw` (protocol on, no D14 correction). Smoke: 56 runs in 17 s; the full sweep
+(about 1,900 runs with `-raw` arms for random and tpe) is estimated at 15-20 min wall with 4 jobs, < 1 GB.
 
 ## Verification
 `python benchmarks/harness.py --smoke` finishes and `summarise.py` prints a table; unit tests for problems

@@ -11,7 +11,9 @@ candidates a given (config, seed, tells) produces is a breaking change.
 - Strategies: Latin-hypercube start, then random, Optuna TPE (`nofluke[optuna]`) or Optuna GP (`nofluke[gp]`,
   needs torch); `strategy.options` pass sampler kwargs (D13).
 - Noise protocol: evaluation seeds shared per replicate, rolling re-evaluation of the plausible-best set,
-  empirical-Bayes shrunk-mean ranking with lower confidence bounds.
+  empirical-Bayes shrunk-mean ranking with lower confidence bounds, corrected for shared seed effects (D14).
 - Local evaluators: `optimize` (Python function, threads or processes) and `run_command` (shell template).
+- Benchmark harness (`benchmarks/`): noisy Branin, Hartmann6, a mixed HPO-like problem and an optional
+  scikit-learn task, simulated asynchronous workers, protocol on/off/raw arms (`nofluke[bench]`).
 - CLI: `nofluke init / ask / tell / pending / abandon / status / best / export / done / verify / run`;
   `ask` and `pending` take `--split DIR`.

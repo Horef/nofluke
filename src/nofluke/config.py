@@ -29,6 +29,7 @@ _NOISE_DEFAULTS: dict[str, Any] = {
     "nu0": 4.0,
     "prior_sd": None,
     "seed_mode": "shared",
+    "seed_effects": "adjust",
 }
 
 
@@ -141,6 +142,9 @@ def normalise(config: Mapping[str, Any]) -> dict[str, Any]:
     seed_mode = given["seed_mode"]
     if seed_mode not in ("shared", "per_candidate"):
         raise NoflukeError(f"config: 'noise.seed_mode' must be 'shared' or 'per_candidate', got {seed_mode!r}")
+    seed_effects = given["seed_effects"]
+    if seed_effects not in ("adjust", "ignore"):
+        raise NoflukeError(f"config: 'noise.seed_effects' must be 'adjust' or 'ignore', got {seed_effects!r}")
     out["noise"] = {
         "reeval_share": _float("noise.", "reeval_share", given["reeval_share"], 0.0, 1.0),
         "min_candidates": _int("noise.", "min_candidates", given["min_candidates"], 1),
@@ -150,6 +154,7 @@ def normalise(config: Mapping[str, Any]) -> dict[str, Any]:
         "nu0": _float("noise.", "nu0", given["nu0"], 0.0, open_low=True),
         "prior_sd": None if prior_sd is None else _float("noise.", "prior_sd", prior_sd, 0.0),
         "seed_mode": seed_mode,
+        "seed_effects": seed_effects,
     }
     return out
 

@@ -253,11 +253,13 @@ class Study:
             s = model.stats[cid]
             rows.append({
                 "rank": position, "candidate": cid, "params": dict(state.candidates[cid].params), "n": s.n,
-                "mean": sign * s.mean, "sd": s.sd, "shrunk_mean": sign * s.shrunk_mean, "se": s.se,
+                "mean": sign * s.mean, "raw_mean": sign * s.raw_mean, "sd": s.sd, "shrunk_mean": sign * s.shrunk_mean, "se": s.se,
                 bound: sign * s.lcb,
             })  # fmt: skip
         return {"n_candidates": len(model.stats), "sigma": {"value": model.sigma, "source": model.sigma_source},
-                "tie_break": model.tie_break, "best": rows}  # fmt: skip
+                "tie_break": model.tie_break,
+                "seed_effects": {str(r): sign * b for r, b in sorted(model.seed_effects.items())},
+                "best": rows}  # fmt: skip
 
     def best(self, top: int | None = None) -> list[dict[str, Any]]:
         """The `top` best candidates (all if None), best first; see `best_report`."""

@@ -25,7 +25,7 @@ def test_defaults_are_filled_in():
     assert cfg["strategy"] == {"name": "random", "n_init": 16, "options": {}}
     assert cfg["noise"] == {
         "reeval_share": 0.333, "min_candidates": 8, "max_replicates": 6, "finalist_share": 0.08,
-        "z": 1.5, "nu0": 4.0, "prior_sd": None, "seed_mode": "shared",
+        "z": 1.5, "nu0": 4.0, "prior_sd": None, "seed_mode": "shared", "seed_effects": "adjust",
     }  # fmt: skip
     assert normalise(cfg) == cfg  # idempotent
 
