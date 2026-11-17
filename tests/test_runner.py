@@ -28,18 +28,23 @@ def test_optimize_threads_on_a_noisy_quadratic(tmp_path):
 
 def test_optimize_keeps_n_workers_in_flight_and_no_more(tmp_path):
     study = Study.create(tmp_path, make_config(budget=24))
-    lock = threading.Lock()
+    full = threading.Condition()
     running = peak = 0
 
     def func(params, seed):
         nonlocal running, peak
-        with lock:
+        with full:
             running += 1
             peak = max(peak, running)
-        time.sleep(0.02)
-        with lock:
+            full.notify_all()
+            # Wait (bounded) until the pool is full, so the test does not depend on how fast `ask` is (slow on Windows).
+            full.wait_for(lambda: running >= 3 or study_is_draining(), timeout=2.0)
+        with full:
             running -= 1
         return evaluate(params, seed)
+
+    def study_is_draining():
+        return study.status()["remaining"] == 0
 
     optimize(study, func, n_workers=3)
     assert peak == 3 and study.status()["ok"] == 24
