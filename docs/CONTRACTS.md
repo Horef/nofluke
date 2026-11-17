@@ -50,12 +50,13 @@ if `log`); int bounds `low <= high` (`low >= 1` if `log`); choice needs ≥ 1 di
 ```
 
 ## 3. Journal events (`journal.jsonl`, format 1)
-One JSON object per line, UTF-8, `\n`-terminated, fsynced after each append. Times are UTC ISO 8601 with `Z`.
+One JSON object per line, UTF-8, `\n`-terminated, fsynced after each append; the key `event` names its kind. Times
+are UTC ISO 8601 with `Z`.
 Ids are integers counted from 1: candidate ids and evaluation ids are separate sequences.
 
 | event | fields |
 |---|---|
-| `study` (first line only) | `format` (1), `time`, `config` (normalised), `config_hash` (sha256 of canonical JSON), `space_hash`, `provenance` {`nofluke_version`, `nofluke_commit` or null, `python`, `numpy`, `optuna` or null, `host`} |
+| `study` (first line only) | `format` (1), `time`, `config` (normalised), `config_hash` (sha256 of canonical JSON; the space is hashed as an ordered list of (name, spec) pairs because its order fixes LHS columns and decoding), `space_hash`, `provenance` {`nofluke_version`, `nofluke_commit` or null, `python`, `numpy`, `optuna` or null, `host`} |
 | `ask` | `ask` (int, from 1), `time`, `candidates`: [{`candidate`, `params`, `origin` {`strategy`, `index`}}] (new ones only), `evals`: [{`eval`, `candidate`, `replicate`, `seed`, `kind` (`new`/`reeval`/`retry`), `attempt`}] |
 | `tell` | `time`, `eval`, `status` (`ok` or `failed`), `value` (finite number, `ok` only), `reason` (`failed` only, string), `info` (object, optional) |
 | `abandon` | `time`, `eval`, `reason`: a pending evaluation given up; no retry; frees its budget slot. A later `tell` for it is still accepted. |
@@ -78,8 +79,9 @@ internally in "higher is better" units (negated for `minimize`).
 `{"eval": 7, "value": 0.771, "info": {"test_acc": 0.70, "runtime_s": 412}}` or
 `{"eval": 7, "status": "failed", "reason": "node failure"}`. `info` is stored, never used for selection.
 
-`nofluke best --json` prints a list ranked as in D9: `rank`, `candidate`, `params`, `n`, `mean`, `sd`,
-`shrunk_mean`, `se`, `lcb`, plus top-level `n_candidates` and `sigma` (the noise SD estimate and its source).
+`nofluke best --json` prints `{"n_candidates", "sigma": {"value", "source"}, "tie_break", "best": [...]}`; `best` is
+ranked as in D9 with `rank`, `candidate`, `params`, `n`, `mean`, `sd`, `shrunk_mean`, `se`, `lcb`. `sigma.source` is
+`pooled`, `prior_sd`, `spread`, `own` or `none`; `tie_break` is true when τ² = 0 and the secondary key decided.
 Values are in the user's units (for `minimize`, `lcb` becomes the upper bound and is named `ucb`).
 
 `nofluke export --format csv|jsonl` writes one row per evaluation: `eval`, `candidate`, `replicate`, `seed`,

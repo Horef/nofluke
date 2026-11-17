@@ -7,8 +7,8 @@ each, a simulator, a lab script), and tell the scores back. nofluke keeps an app
 journal, re-evaluates the leading candidates with new seeds, and ranks them by a shrunk mean with a lower
 confidence bound, so the winner it reports is not just the luckiest single run.
 
-> Status: early development (0.1.0.dev0). The interface below is the design target; see `docs/STATUS.md` for what
-> works today.
+> Status: early development (0.1.0.dev0). The CLI and Python API below work and are tested; the Optuna strategies
+> (`tpe`, `gp`) are not implemented yet. See `docs/STATUS.md`.
 
 ## Why
 Existing optimisers (Optuna, SMAC3, Nevergrad, pymoo, ...) are excellent at proposing candidates, but none offers a

@@ -38,7 +38,6 @@ Python ≥ 3.11 (developed on 3.12); macOS, Linux and Windows (the owner also wo
 required dependency. State folders may live on network file systems shared with a cluster login node.
 
 ## Open questions (for the owner)
-- [ ] Public or private GitHub repository `Horef/nofluke`, and publish to PyPI once stable? - decides licence
-  visibility and whether the name is reserved now.
-- [ ] Should the agent skill ("how to set up a nofluke search in any repo") live in the claude-plugins marketplace
-  repo or in this repo? - decides where it is versioned.
+- [x] Public or private GitHub repository? - public `Horef/nofluke` (owner, 2026-11-17; D12). PyPI release once
+  the CLI is stable.
+- [x] Where does the agent skill live? - inside this repository, `skills/` (owner, 2026-11-17; D12).

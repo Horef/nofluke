@@ -15,6 +15,7 @@ Every choice between alternatives, and every gap the code or sources leave that 
 | D10 | Evaluation seeds: replicate r gets the same seed for every candidate (2026-11-17; status: accepted) |
 | D11 | Strategies: Latin-hypercube start, then random (built-in) or Optuna TPE/GP (2026-11-17; status: accepted) |
 | D6 | Answers to simple_complex_v1's wish list (2026-11-17; status: accepted) |
+| D12 | Public GitHub repository; the agent skill lives in this repository (2026-11-17; status: accepted) |
 <!-- docmap:end -->
 
 ## D1. Build the layer around the optimiser, not another GA engine (2026-11-17; status: accepted)
@@ -103,7 +104,10 @@ Every choice between alternatives, and every gap the code or sources leave that 
   `max_replicates` (default 6) counting pending evaluations. The member with the fewest (completed + pending)
   evaluations is chosen, ties by highest shrunk mean then lowest candidate id. In the final `finalist_share` of
   the budget (default 8 %) every slot is a re-evaluation while S has a member below the cap. The policy is
-  recomputed from the state at every ask.
+  recomputed from the state at every ask. Clarified while implementing (2026-11-17): re-evaluation ties use the
+  full D9 rank order (shrunk mean, then mean − zσ_i/√n_i, then id), so equal shrunk means early on fall to the
+  better raw mean; a finalist slot with no eligible member of S becomes a new candidate; retries do not count as
+  issued evaluations in the share.
 - **Alternatives:** F-race / Hoeffding races - eat the budget or never eliminate at this n. SMAC intensification -
   sequential and stateful. OCBA - poor at tiny budgets. Successive halving - blocks on out-of-order results.
 - **Consequences:** About 2/3 of the budget explores. Defaults are plausible, not tuned: the benchmark harness must
@@ -166,3 +170,10 @@ Every choice between alternatives, and every gap the code or sources leave that 
 - **Alternatives:** Implementing the list literally (GA core, Slurm backend) - see D1, D2.
 - **Consequences:** simple_complex_v1 can start once the MVP plan (`docs/plans/mvp.md`) is done.
 - **Evidence / source:** this log's D1-D11; the request file.
+
+## D12. Public GitHub repository; the agent skill lives in this repository (2026-11-17; status: accepted)
+- **Context:** BRIEF open questions on visibility and on where the "set up a nofluke search" agent skill lives.
+- **Decision:** `Horef/nofluke` is public (MIT). The agent skill is versioned with the library in `skills/`.
+- **Alternatives:** Private repository; the skill in the claude-plugins marketplace repository.
+- **Consequences:** The skill changes in the same commits as the CLI it documents; a marketplace entry can point here.
+- **Evidence / source:** owner, 2026-11-17.
