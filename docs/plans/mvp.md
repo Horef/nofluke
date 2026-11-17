@@ -1,5 +1,5 @@
 # Plan: core MVP (ask/tell CLI, journal, noise protocol)
-Status: current (verified 2026-11-17; in progress)
+Status: historical (done 2026-11-17)
 
 ## Objective
 The smallest nofluke that simple_complex_v1 can drive from Slurm: `init / ask / tell / pending / abandon / status /

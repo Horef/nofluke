@@ -29,6 +29,7 @@ Options: `--keep` stores each run's study folder under `<out>/studies` (default:
 |---|---|---|
 | `results/` | Output folders of benchmark runs, one `<run_id>/` per run with `manifest.json` and `results.jsonl` (see `benchmarks/README.md`). |  |
 | `harness.py` | Benchmark harness: run nofluke arms on the benchmark problems with simulated asynchronous workers. | `test_benchmark_problems` |
+| `overview.py` | Compact cross-cell overview of a benchmark results folder: medians, paired win rates and optimism (R1 tables). |  |
 | `problems.py` | Benchmark problems: noise-free `true(params)` plus a noisy `observe(...)` with common-random-number structure. | `harness`, `test_benchmark_problems` |
 | `summarise.py` | Summarise a benchmark results folder into markdown tables (medians and IQRs over seeds, paired win rates). | `test_benchmark_problems` |
 <!-- docmap:end -->

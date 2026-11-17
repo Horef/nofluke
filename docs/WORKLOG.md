@@ -2,6 +2,25 @@
 Newest first. Each entry: what changed, how it was verified, what's next. Never edit or delete past entries.
 Earlier months: `docs/worklog/YYYY-MM.md`.
 
+## 2026-11-17 - Benchmarks: D14, full sweep (R1), agent skill, Windows CI
+
+Changed: Benchmark harness (agent) reviewed; its smoke run exposed shared-seed offsets biasing comparisons between
+candidates with different replicate counts, answered by D14 (seed-effect correction, `seed_effects: adjust`); a
+raw-UCB plausible-best set was tried and rejected (recorded in D14). Windows CI fixed (docmap paths, concurrency
+test timing, optional `resource`). Agent skill `skills/nofluke-search/SKILL.md` (D12). Full sweep run with the
+owner's approval and written up as R1; `benchmarks/overview.py`; `docs/RUNS.md` via `[tool.docmap.runs]`.
+Decisions: D14.
+
+| Verification command | Result |
+|---|---|
+| `python -m pytest` | 225 passed in 10.7 s |
+| GitHub Actions `tests` on 3012a62 | 9/9 jobs green (ubuntu, macos, windows × 3.11-3.13) |
+| `python benchmarks/harness.py ... --seeds 0-19 --budget 128 --jobs 4` | 1,840 runs, 0 errors, 964 s (run 20261117T163106Z) |
+| `python benchmarks/overview.py benchmarks/results/sweep-2026-11-17/results.jsonl` | R1 tables |
+| `python tools/docmap.py check` | 0 errors |
+
+Next: simple_complex_v1's first search through the CLI; then consider an adaptive re-evaluation share.
+
 ## 2026-11-17 - Optuna backend, cluster guide, benchmark plan
 
 Changed: Optuna backend (`tpe`, `gp`) by an implementation agent, reviewed: the history encoder mapped choice

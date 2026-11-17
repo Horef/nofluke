@@ -215,4 +215,5 @@ Every choice between alternatives, and every gap the code or sources leave that 
 - **Consequences:** Without a common seed effect the correction estimates effects near zero at a small variance
   cost. Whether it helps on real training noise is unresolved; the benchmark compares `-on` with `-raw` arms.
 - **Evidence / source:** smoke and 4-seed probes, 2026-11-17 (TPE on Branin, noise 0.5: median D9 regret 5.4 with
-  the correction vs 9.3 without; directional only); `tests/test_noise.py` exact recovery test.
+  the correction vs 9.3 without; directional only); `tests/test_noise.py` exact recovery test. Revisited with R1
+  (20 seeds, budget 128): no measurable effect on the pick (paired win 50-52 %); kept as default, unresolved.

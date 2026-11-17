@@ -1,5 +1,5 @@
 # Plan: benchmark harness
-Status: current (verified 2026-11-17; in progress)
+Status: historical (done 2026-11-17; result R1)
 
 ## Objective
 Measure, at budgets of 64-128 noisy evaluations, (a) whether the noise protocol (D8, D9) picks better true optima

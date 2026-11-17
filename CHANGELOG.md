@@ -14,6 +14,6 @@ candidates a given (config, seed, tells) produces is a breaking change.
   empirical-Bayes shrunk-mean ranking with lower confidence bounds, corrected for shared seed effects (D14).
 - Local evaluators: `optimize` (Python function, threads or processes) and `run_command` (shell template).
 - Benchmark harness (`benchmarks/`): noisy Branin, Hartmann6, a mixed HPO-like problem and an optional
-  scikit-learn task, simulated asynchronous workers, protocol on/off/raw arms (`nofluke[bench]`).
+  scikit-learn task, simulated asynchronous workers, protocol on/off/raw arms, `overview.py` cross-cell tables (`nofluke[bench]`); first results in R1.
 - CLI: `nofluke init / ask / tell / pending / abandon / status / best / export / done / verify / run`;
   `ask` and `pending` take `--split DIR`.

@@ -7,8 +7,9 @@ each, a simulator, a lab script), and tell the scores back. nofluke keeps an app
 journal, re-evaluates the leading candidates with new seeds, and ranks them by a shrunk mean with a lower
 confidence bound, so the winner it reports is not just the luckiest single run.
 
-> Status: early development (0.1.0.dev0). The CLI, the Python API and the strategies below work and are tested;
-> the noise-protocol defaults are not yet benchmarked. See `docs/STATUS.md`.
+> Status: early development (0.1.0.dev0). The CLI, the Python API and the strategies below work and are tested on
+> Linux, macOS and Windows. Benchmarks (`docs/RESULTS.md`, R1): the reported winner's optimism is about halved and
+> the pick is modestly better on average than the best single observation. See `docs/STATUS.md`.
 
 ## Why
 Existing optimisers (Optuna, SMAC3, Nevergrad, pymoo, ...) are excellent at proposing candidates, but none offers a

@@ -52,3 +52,8 @@ reason = "the core runs with numpy only; Optuna is an optional backend imported 
 source = "nofluke"
 imports = ["torch", "jax", "tensorflow", "neuron", "submitit", "pandas"]
 reason = "nofluke is a general library: no ML frameworks, simulators or cluster clients (D2)"
+
+[tool.docmap.runs]
+manifests = "benchmarks/results/**/manifest.json"
+out = "docs/RUNS.md"
+columns = { run = "run_id", created = "time", commit = "git.revision", budget = "budget", runs = "runs" }

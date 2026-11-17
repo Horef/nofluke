@@ -7,6 +7,7 @@ symbols of the repo).
 
 - **`benchmarks/`** — Benchmark harness for nofluke: it measures whether the noise protocol (D8, D9) picks better true optima than "no re-evaluation, best single observation", and how the strategies (D11) compare with random search at equal budget, on synthetic noisy problems with known optima and on a real scikit-learn problem.
   - `harness.py` — Benchmark harness: run nofluke arms on the benchmark problems with simulated asynchronous workers. · imported by 1
+  - `overview.py` — Compact cross-cell overview of a benchmark results folder: medians, paired win rates and optimism (R1 tables).
   - `problems.py` — Benchmark problems: noise-free `true(params)` plus a noisy `observe(...)` with common-random-number structure. · imported by 2
   - `summarise.py` — Summarise a benchmark results folder into markdown tables (medians and IQRs over seeds, paired win rates). · imported by 1
   - **`src/nofluke/`** — The nofluke package: study configuration and search space, the append-only journal and its replayed state, the noise statistics and planner that decide each ask, the `Study` API, local evaluators and the command line.
