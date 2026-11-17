@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nofluke"
+version = "0.1.0.dev0"
+description = "Ask/tell search over slow, noisy evaluations that run outside Python, without rewarding flukes."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Sergiy Horef" }]
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.24"]
+keywords = ["hyperparameter optimization", "black-box optimization", "noisy optimization", "ask-tell", "slurm"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+]
+
+[project.optional-dependencies]
+yaml = ["pyyaml>=6"]
+optuna = ["optuna>=4.0"]
+dev = ["pytest>=8", "pyyaml>=6"]
+
+[project.scripts]
+nofluke = "nofluke.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.docmap]
+exclude = ["docs/requests/*"]
+link_exempt = ["docs/requests/*"]
+lifecycle = ["docs/*.md", "docs/research/*.md", "docs/plans/*.md"]
+
+[[tool.docmap.forbid]]
+source = "nofluke"
+except = ["nofluke.strategies.optuna_backend"]
+imports = ["optuna"]
+reason = "the core runs with numpy only; Optuna is an optional backend imported lazily (D3)"
+
+[[tool.docmap.forbid]]
+source = "nofluke"
+imports = ["torch", "jax", "tensorflow", "neuron", "submitit", "pandas"]
+reason = "nofluke is a general library: no ML frameworks, simulators or cluster clients (D2)"

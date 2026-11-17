@@ -1,0 +1,35 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# machine-local agent notes (AGENTS.local.md, CLAUDE.local.md; not AGENTS.local.example.md)
+*.local.md
+.claude/settings.local.json
+Claude outputs/
+
+# environments, caches, builds
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# study state folders and benchmark outputs (created by runs, never committed)
+runs/
+outputs/
+/benchmarks/results/*
+!/benchmarks/results/README.md
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
