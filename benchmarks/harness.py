@@ -20,7 +20,10 @@ import json
 import math
 import os
 import platform
-import resource
+try:
+    import resource  # Unix only; peak memory is reported as None elsewhere
+except ImportError:  # pragma: no cover - Windows
+    resource = None  # type: ignore[assignment]
 import subprocess
 import sys
 import tempfile
@@ -136,7 +139,8 @@ def run_one(spec: dict[str, Any]) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001 - one failed run must not kill a sweep
         record["error"] = f"{type(exc).__name__}: {exc}"
     record["wall_s"] = round(time.perf_counter() - started, 3)
-    record["peak_rss_mb"] = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (2**20 if sys.platform == "darwin" else 2**10), 1)
+    record["peak_rss_mb"] = None if resource is None else round(
+        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (2**20 if sys.platform == "darwin" else 2**10), 1)
     return record
 
 
