@@ -56,6 +56,11 @@ optimize(study, lambda params, seed: train_and_score(params, seed), n_workers=4)
 print(study.best(top=3))
 ```
 
+## Agent skill
+`skills/nofluke-search/SKILL.md` teaches coding agents (Claude Code and others) to set up a nofluke search in any
+repository: framing the score and a held-out test set, budgeting and asking before compute, wiring the evaluator,
+and reporting the pick honestly.
+
 ## Good practice
 Select on a validation score, then evaluate only the final 1-3 picks once on a test set nofluke never sees. Compare
 any strategy with random search at the same budget. Formats: `docs/CONTRACTS.md`; design: `docs/ARCHITECTURE.md`.
